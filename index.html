@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Duration of Status | A comic zine</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font: 16px/1.5 Georgia, "Times New Roman", serif;
+      color: #f1f1ef;
+      background: #111;
+    }
+    * { box-sizing: border-box; }
+    body {
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      overflow-x: hidden;
+      background: #202020;
+    }
+    body::before {
+      position: fixed;
+      z-index: -1;
+      inset: -30%;
+      content: "";
+      pointer-events: none;
+      opacity: .38;
+      background:
+        radial-gradient(ellipse at 26% 32%, #ffffff13, transparent 34%),
+        radial-gradient(ellipse at 78% 72%, #ffffff0d, transparent 32%);
+      background-size: 180% 180%;
+      animation: ambient-drift 72s ease-in-out infinite alternate;
+    }
+    body::after {
+      position: fixed;
+      z-index: 0;
+      inset: -50%;
+      content: "";
+      pointer-events: none;
+      opacity: .045;
+      mix-blend-mode: screen;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch' result='noise'/%3E%3CfeColorMatrix in='noise' type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      animation: grain-shift 180ms steps(3) infinite;
+    }
+    @keyframes ambient-drift {
+      from { background-position: 0% 30%; }
+      to { background-position: 100% 70%; }
+    }
+    @keyframes grain-shift {
+      from { background-position: 0 0; }
+      to { background-position: 180px 90px; }
+    }
+    .reader-shell {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      min-height: 100vh;
+      min-height: 100svh;
+      width: 100%;
+      align-items: center;
+      justify-items: center;
+      padding: 0 1rem max(.8rem, env(safe-area-inset-bottom));
+    }
+    .reader-content {
+      display: flex;
+      width: 100%;
+      min-height: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(1rem, 3vh, 1.75rem);
+    }
+    main {
+      position: relative;
+      width: min(94vw, 74rem, 118svh);
+      aspect-ratio: 84 / 51;
+      flex: 0 0 auto;
+      perspective: 1500px;
+      transform-style: preserve-3d;
+      touch-action: pan-y;
+    }
+    .view {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 1px;
+      padding: 6px;
+      border: 1px solid #ffffff70;
+      border-radius: 3px;
+      background: #ffffff0b;
+      box-shadow: 0 24px 70px #0009, 0 0 28px #ffffff0b;
+      transform-style: preserve-3d;
+    }
+    .view[hidden] { display: none; }
+    .view.turn-source { z-index: 2; }
+    .view.turn-target { z-index: 1; }
+    .view.single { grid-template-columns: minmax(0, 1fr); width: calc(50% + 7px); height: 100%; }
+    .view.single.cover { margin-inline: auto 0; }
+    .view.single.back-cover { margin-inline: 0 auto; }
+    .view:not(.single)::after {
+      position: absolute;
+      inset: 6px;
+      content: "";
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent 48%, #00000020 49.7%, #00000030 50%, #00000012 50.3%, transparent 52%);
+    }
+    .panel {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 42 / 51;
+      background: #fff;
+      box-shadow: 0 2px 12px #0003;
+      backface-visibility: hidden;
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+    .panel.is-turning { visibility: hidden; }
+    .panel::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background-image: url("images/Duration%20of%20Status_8-Page_Legal-Size%20Zine.png");
+      background-repeat: no-repeat;
+      background-size: 400% 200%;
+      background-position: var(--x) var(--y);
+      transform: rotate(var(--rotation, 0deg));
+    }
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      font: .875rem/1.4 system-ui, sans-serif;
+    }
+    button {
+      display: grid;
+      width: 2.75rem;
+      height: 2.75rem;
+      place-items: center;
+      border: 1px solid #ffffff42;
+      border-radius: 50%;
+      background: #ffffff12;
+      color: #fff;
+      font: 1.2rem/1 system-ui, sans-serif;
+      cursor: pointer;
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+      backdrop-filter: blur(18px) saturate(145%);
+      box-shadow: inset 0 1px #ffffff20, 0 5px 18px #0005;
+      transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+    button:hover:not(:disabled) { border-color: #ffffff80; background: #ffffff24; transform: translateY(-1px); }
+    button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    button:disabled { opacity: .35; cursor: default; }
+    #counter { min-width: 6.5rem; color: #dededb; text-align: center; }
+    .instructions { margin: -.45rem 0 0; color: #ffffff91; font: .75rem/1.4 system-ui, sans-serif; text-align: center; }
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .65rem;
+      padding-top: .75rem;
+      color: #ffffff80;
+      font: .75rem/1.4 system-ui, sans-serif;
+    }
+    footer a { color: #f2f2f0; text-decoration-color: #ffffff75; text-underline-offset: .18em; }
+    footer a:hover { text-decoration-color: #fff; }
+    .page-turn {
+      position: absolute;
+      z-index: 4;
+      overflow: visible;
+      pointer-events: none;
+      transform-style: preserve-3d;
+    }
+    .page-turn .turn-face {
+      position: absolute;
+      inset: 0;
+      box-shadow: 0 3px 9px #0007;
+      aspect-ratio: auto;
+      backface-visibility: hidden;
+    }
+    .page-turn .turn-face-back { transform: rotateY(180deg); }
+    .page-turn.forward {
+      transform-origin: left center;
+      animation: turn-forward 900ms cubic-bezier(.42,0,.58,1) both;
+    }
+    .page-turn.backward {
+      transform-origin: right center;
+      animation: turn-backward 900ms cubic-bezier(.42,0,.58,1) both;
+    }
+    @keyframes turn-forward {
+      from { transform: rotateY(0); }
+      to { transform: rotateY(-180deg); }
+    }
+    @keyframes turn-backward {
+      from { transform: rotateY(0); }
+      to { transform: rotateY(180deg); }
+    }
+    @media (max-width: 560px) {
+      .reader-shell { padding-inline: .65rem; }
+      .reader-content { gap: 1rem; }
+      nav { gap: .7rem; }
+      button { width: 2.5rem; height: 2.5rem; }
+      .instructions { max-width: 24rem; }
+    }
+    @media (max-height: 560px) {
+      .reader-shell { padding: 0 .5rem max(.4rem, env(safe-area-inset-bottom)); }
+      .reader-content { gap: .5rem; }
+      main { width: min(94vw, 74rem, 108svh); }
+      .instructions { margin-top: -.5rem; }
+      footer { padding-top: .4rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="reader-shell">
+  <div class="reader-content">
+  <main id="reader" aria-live="polite" aria-label="Zine pages">
+    <article class="view single cover" data-label="Cover">
+      <div class="panel" role="img" aria-label="Page 1, cover" style="--x: 33.3333%; --y: 100%;"></div>
+    </article>
+    <article class="view" data-label="Pages 2-3" hidden>
+      <div class="panel" role="img" aria-label="Page 2" style="--x: 66.6667%; --y: 100%;"></div>
+      <div class="panel" role="img" aria-label="Page 3" style="--x: 100%; --y: 100%;"></div>
+    </article>
+    <article class="view" data-label="Pages 4-5" hidden>
+      <div class="panel" role="img" aria-label="Page 4" style="--x: 100%; --y: 0%; --rotation: 180deg;"></div>
+      <div class="panel" role="img" aria-label="Page 5" style="--x: 66.6667%; --y: 0%; --rotation: 180deg;"></div>
+    </article>
+    <article class="view" data-label="Pages 6-7" hidden>
+      <div class="panel" role="img" aria-label="Page 6" style="--x: 33.3333%; --y: 0%; --rotation: 180deg;"></div>
+      <div class="panel" role="img" aria-label="Page 7" style="--x: 0%; --y: 0%; --rotation: 180deg;"></div>
+    </article>
+    <article class="view single back-cover" data-label="Back cover" hidden>
+      <div class="panel" role="img" aria-label="Page 8, back cover" style="--x: 0%; --y: 100%;"></div>
+    </article>
+  </main>
+  <nav aria-label="Zine navigation">
+    <button id="previous" type="button" aria-label="Previous spread" title="Previous spread" disabled><span aria-hidden="true">&larr;</span></button>
+    <span id="counter" aria-live="polite">Cover</span>
+    <button id="next" type="button" aria-label="Next spread" title="Next spread"><span aria-hidden="true">&rarr;</span></button>
+  </nav>
+  <p class="instructions">Tap either side of the page, swipe, or use the arrow keys.</p>
+  </div>
+  <footer><span>Created by Md Tajul Islam</span><a href="https://facebook.com/ItsTajul" target="_blank" rel="noopener noreferrer">Give feedback</a></footer>
+  </div>
+  <script>
+    const views = [...document.querySelectorAll('.view')];
+    const reader = document.querySelector('#reader');
+    const counter = document.querySelector('#counter');
+    const previous = document.querySelector('#previous');
+    const next = document.querySelector('#next');
+    let current = 0;
+    let activeTurn;
+    let pointerStart;
+    let suppressClick = false;
+
+    function animateTurn(fromView, toView, direction, deferReveal) {
+      activeTurn?.remove();
+      const forward = direction === 'forward';
+      const fromPanels = fromView.querySelectorAll('.panel');
+      const toPanels = toView.querySelectorAll('.panel');
+      const frontPanel = fromPanels[forward ? fromPanels.length - 1 : 0];
+      const backPanel = toPanels[forward ? 0 : toPanels.length - 1];
+      const panelBounds = frontPanel.getBoundingClientRect();
+      const readerBounds = reader.getBoundingClientRect();
+      fromView.classList.add('turn-source');
+      toView.classList.add('turn-target');
+      toView.hidden = false;
+      if (deferReveal) backPanel.classList.add('is-turning');
+      frontPanel.classList.add('is-turning');
+      const turn = document.createElement('div');
+      turn.className = `page-turn ${direction}`;
+      turn.style.left = `${panelBounds.left - readerBounds.left}px`;
+      turn.style.top = `${panelBounds.top - readerBounds.top}px`;
+      turn.style.width = `${panelBounds.width}px`;
+      turn.style.height = `${panelBounds.height}px`;
+
+      for (const [panel, faceClass] of [[frontPanel, 'turn-face-front'], [backPanel, 'turn-face-back']]) {
+        const face = document.createElement('div');
+        face.className = `panel turn-face ${faceClass}`;
+        face.style.cssText = panel.getAttribute('style') || '';
+        face.setAttribute('aria-hidden', 'true');
+        turn.append(face);
+      }
+
+      activeTurn = turn;
+      reader.append(turn);
+      const clearTurn = () => {
+        if (activeTurn !== turn) return;
+        turn.remove();
+        frontPanel.classList.remove('is-turning');
+        backPanel.classList.remove('is-turning');
+        fromView.classList.remove('turn-source');
+        toView.classList.remove('turn-target');
+        fromView.hidden = true;
+        toView.hidden = false;
+        if (deferReveal) {
+          counter.textContent = toView.dataset.label;
+          previous.disabled = current === 0;
+          next.disabled = current === views.length - 1;
+        }
+        activeTurn = null;
+      };
+      turn.addEventListener('animationend', clearTurn, { once: true });
+      window.setTimeout(clearTurn, 1000);
+    }
+
+    function showView(index) {
+      if (activeTurn) return;
+      const direction = index >= current ? 'forward' : 'backward';
+      const nextIndex = Math.max(0, Math.min(index, views.length - 1));
+      const changed = nextIndex !== current;
+      const fromView = views[current];
+      const toView = views[nextIndex];
+      if (!changed) return;
+      const deferReveal = fromView.classList.contains('single') || toView.classList.contains('single');
+      animateTurn(fromView, toView, direction, deferReveal);
+      current = nextIndex;
+      if (!deferReveal) {
+        counter.textContent = toView.dataset.label;
+        previous.disabled = current === 0;
+        next.disabled = current === views.length - 1;
+      }
+    }
+    previous.addEventListener('click', () => showView(current - 1));
+    next.addEventListener('click', () => showView(current + 1));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft') showView(current - 1);
+      if (event.key === 'ArrowRight') showView(current + 1);
+    });
+    reader.addEventListener('pointerdown', event => {
+      if (event.isPrimary && !event.target.closest('button')) pointerStart = event.clientX;
+    });
+    reader.addEventListener('pointerup', event => {
+      if (pointerStart === undefined) return;
+      const distance = event.clientX - pointerStart;
+      pointerStart = undefined;
+      if (Math.abs(distance) > 48) {
+        suppressClick = true;
+        showView(current + (distance < 0 ? 1 : -1));
+        window.setTimeout(() => { suppressClick = false; }, 350);
+      }
+    });
+    reader.addEventListener('pointercancel', () => { pointerStart = undefined; });
+    reader.addEventListener('click', event => {
+      if (suppressClick || !event.target.closest('.panel')) return;
+      const midpoint = reader.getBoundingClientRect().left + reader.clientWidth / 2;
+      showView(current + (event.clientX < midpoint ? -1 : 1));
+    });
+    showView(0);
+  </script>
+</body>
+</html>
